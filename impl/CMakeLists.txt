@@ -1,0 +1,7 @@
+add_library(hw1_data data.c)
+add_library(hw1_io io.c)
+add_library(hw1_utils utils.c)
+add_library(hw1_logic logic.c)
+target_link_libraries(hw1_io hw1_data)
+target_link_libraries(hw1_utils hw1_data)
+target_link_libraries(hw1_logic hw1_io hw1_utils hw1_data)
