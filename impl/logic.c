@@ -17,8 +17,29 @@ int comp(const void* info1_void, const void* info2_void) {
     return strcmp(info1->name, info2->name);
 }
 
+void get_cwd(char* cwd) {
+    char* ret = getcwd(cwd, 254);
+    EXIT_IF(ret == NULL, "Could not obtain cwd");
+    int cwd_len = strlen(cwd);
+    cwd[cwd_len] = '/';
+    cwd[cwd_len + 1] = '\0';
+}
+
+void convert_path_to_absolute(char* absolute_path, const char* cwd, const char* path) {
+    strcpy(absolute_path, cwd);
+    strcat(absolute_path, path);
+}
+
 void process_input_file(const char* input_file, const char* output_file) {
     EXIT_IF(input_file == NULL || output_file == NULL, "Got null pointer as input");
+
+    char cwd[256];
+    get_cwd(cwd);
+
+    char absolute_input_path[256];
+    char absolute_output_path[256];
+    convert_path_to_absolute(absolute_input_path, cwd, input_file);
+    convert_path_to_absolute(absolute_output_path, cwd, output_file);
 
     uint n = 0;
     struct Software* info = read_software_info(input_file, &n);

@@ -2,10 +2,8 @@
 #include "data.h"
 #include "macros.h"
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 struct Software* read_software_info(const char* filename, uint* n) {
     VERIFY_OR(filename != NULL && n != NULL, NULL, "Got null pointer as input");
@@ -34,7 +32,7 @@ int read_single_software_info(struct Software* item, FILE* file) {
     item->name = (char*)malloc((MAX_NAME_LENGTH + 1) * sizeof(char));
     VERIFY_OR(item->name != NULL, -1, "Could not allocate memory with malloc");
 
-    char* str_or_null = fgets(item->name, MAX_NAME_LENGTH + 1, file);
+    char* str_or_null = fgets(item->name, MAX_NAME_LENGTH, file);
     VERIFY_OR_WITH_CALLBACK(str_or_null != NULL, -1, "Could not read from file",
         free(item->name));
 

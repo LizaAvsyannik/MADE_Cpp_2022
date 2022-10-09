@@ -95,3 +95,4 @@ _deps
 build/*
 .vscode
 .cache
+*.txt
