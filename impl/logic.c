@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "macros.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -42,7 +43,11 @@ void process_input_file(const char* input_file, const char* output_file) {
     convert_path_to_absolute(absolute_output_path, cwd, output_file);
 
     uint n = 0;
-    struct Software* info = read_software_info(input_file, &n);
+    FILE* file = fopen(absolute_input_path, "r");
+    EXIT_IF(file == NULL, "Could not open file");
+
+    struct Software* info = read_software_info(file, &n);
+    fclose(file);
     EXIT_IF(info == NULL, "Could not read software information");
 
     uint n_filtered = n;
@@ -52,15 +57,19 @@ void process_input_file(const char* input_file, const char* output_file) {
     
     qsort(filtered, n_filtered, sizeof(struct Software), comp);
 
-    FILE* file = fopen(output_file, "w");
+    file = fopen(absolute_output_path, "w");
     EXIT_IF(file == NULL, "Could not open output file");
+
+    fprintf(file, "%u\n", n_filtered);
 
     for (uint i = 0; i < n_filtered; ++i) {
         int ret = print_software_info(&filtered[i], file);
+        fflush(file);
         EXIT_IF_WITH_CALLBACK(ret == -1, "Could not write software information",
-            { free_software_array(info, n); free_software_array(filtered, n_filtered); });
+            { free_software_array(info, n); free_software_array(filtered, n_filtered); fclose(file);});
     }
 
     free_software_array(info, n);
     free_software_array(filtered, n_filtered);
+    fclose(file);
 }

@@ -5,9 +5,7 @@
 #ifndef IO_H
 #define IO_H
 
-struct Software* read_software_info(const char* filename, uint* num_of_soft);
-
-int read_single_software_info(struct Software* item, FILE* file);
+struct Software* read_software_info(FILE* file, uint* num_of_soft);
 
 int print_software_info(const struct Software* info, FILE* file);
 

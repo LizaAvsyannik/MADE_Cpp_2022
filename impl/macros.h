@@ -3,6 +3,7 @@
 
 #ifndef MACROS_H
 #define MACROS_H
+
 #define VERIFY_OR(condition, return_value, error_msg) {\
     if (!(condition)) {\
         fprintf(stderr, "Error: %s, in file %s, line %d\n", error_msg, __FILE__, __LINE__);\

@@ -36,10 +36,13 @@ struct Software* filter(const struct Software* info, uint* n, int (*pred)(const 
 
     for (int i = 0; i < index_ptr; ++i) {
         init_software_info(&filtered[i]);
+    }
+    for (int i = 0; i < index_ptr; ++i) {
         int ret = copy_software_info(&info[indices[i]], &filtered[i]);
         VERIFY_OR_WITH_CALLBACK(ret != -1, NULL, "Could not copy info", 
             { free(indices); free_software_array(filtered, index_ptr); });
     }
+    free(indices);
     *n = index_ptr;
     return filtered;
 }
