@@ -41,15 +41,16 @@ uint filter(struct Software **result, const struct Software *info, uint n,
   VERIFY_OR_WITH_CALLBACK(result != NULL, -1,
                           "Could not allocate memory with malloc",
                           free(indices));
+  struct Software *arr = *result;
 
   for (int i = 0; i < index_ptr; ++i) {
-    init_software_info(&(*result[i]));
+    init_software_info(&arr[i]);
   }
   for (int i = 0; i < index_ptr; ++i) {
-    int ret = copy_software_info(&info[indices[i]], &(*result[i]));
+    int ret = copy_software_info(&info[indices[i]], &arr[i]);
     VERIFY_OR_WITH_CALLBACK(ret != -1, -1, "Could not copy info", {
       free(indices);
-      free_software_array(*result, index_ptr);
+      free_software_array(arr, index_ptr);
     });
   }
   free(indices);

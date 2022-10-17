@@ -22,20 +22,20 @@ int read_single_software_info(struct Software *item, FILE *file) {
 
   uint func_class = 0;
   int ret =
-      fscanf(file, "%u %u %u %u %u\n", &func_class,
-             &item->version.major, // NOLINT (fscanf is unsafe)
-             &item->version.minor, &item->version.patch, &item->version.build);
+      fscanf(file, "%u %u %u %u %u\n", &func_class, // NOLINT (fscanf is unsafe)
+             &item->version.major, &item->version.minor, &item->version.patch,
+             &item->version.build);
   item->func_class = (enum FunctionalClass)func_class;
   VERIFY_OR(ret != EOF && ret == 5, -1, "EOF during read");
 
-  ret = fscanf(file, "%u %u %u\n",
-               &item->installation_date.day, // NOLINT (fscanf is unsafe)
-               &item->installation_date.month, &item->installation_date.year);
+  ret = fscanf(file, "%u %u %u\n", // NOLINT (fscanf is unsafe)
+               &item->installation_date.day, &item->installation_date.month,
+               &item->installation_date.year);
   VERIFY_OR(ret != EOF && ret == 3, -1, "EOF during read");
 
-  ret = fscanf(file, "%u %u %u\n",
-               &item->last_update_date.day, // NOLINT (fscanf is unsafe)
-               &item->last_update_date.month, &item->last_update_date.year);
+  ret = fscanf(file, "%u %u %u\n", // NOLINT (fscanf is unsafe)
+               &item->last_update_date.day, &item->last_update_date.month,
+               &item->last_update_date.year);
   VERIFY_OR(ret != EOF && ret == 3, -1, "EOF during read");
   return 0;
 }
