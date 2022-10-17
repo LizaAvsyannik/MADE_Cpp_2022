@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: "*"
 
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
-
 jobs:
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
@@ -23,17 +19,17 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get -y install lcov cppcheck clang-tidy clang-format valgrind
-        sudo apt-get install python-pip 3 
+        sudo apt-get install python3-pip
         pip3 install cpplint  
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DWITH_COVERAGE=ON -DSANITIZE=ON -WITH_CLANG_TIDY=ON
+      run: cmake -B ${{github.workspace}}/build -DWITH_COVERAGE=ON -DSANITIZE=ON -DWITH_CLANG_TIDY=ON
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build
 
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -53,5 +49,21 @@ jobs:
         clang-tidy impl/*.[h,c] -warnings-as-errors=* -extra-arg=-std=c11 -p build/
         cpplint --extensions=c impl/*.c
     
+    - name: Configure CMake (Valgrind)
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: |
+        rm -rf ${{github.workspace}}/build
+        cmake -B ${{github.workspace}}/build
+    
+    - name: Build (Valgrind)
+      run: cmake --build ${{github.workspace}}/build
+
     - name: Valgrind
-      run: valgrind --tool=memcheck --leak-check=yes -s build/hw1_main
+      working-directory: ${{github.workspace}}/build
+      run: |
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/test_io
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/test_data
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/test_logic
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/test_utils
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s ./hw1_main ../resources/software.txt
