@@ -96,3 +96,4 @@ build/*
 .vscode
 .cache
 *.txt
+!resources/software.txt
