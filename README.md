@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/LizaAvsyannik/MADE_Cpp_2022/branch/main/graph/badge.svg?token=NX85UGLETP)](https://codecov.io/gh/LizaAvsyannik/MADE_Cpp_2022)
+[![codecov](https://codecov.io/gh/LizaAvsyannik/MADE_Cpp_2022/branch/hw1/graph/badge.svg?token=NX85UGLETP)](https://codecov.io/gh/LizaAvsyannik/MADE_Cpp_2022)
 ### _To run programm_
 ```
 cmake . -B build
