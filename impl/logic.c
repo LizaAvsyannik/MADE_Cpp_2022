@@ -53,10 +53,11 @@ void process_input_file(const char *input_file, const char *output_file) {
   EXIT_IF(info == NULL, "Could not read software information");
 
   struct Software *filtered = NULL;
-  uint n_filtered = filter(&filtered, info, n, check);
-  EXIT_IF_WITH_CALLBACK(n_filtered == -1,
+  int ret_filtered = filter(&filtered, info, n, check);
+  EXIT_IF_WITH_CALLBACK(ret_filtered == -1,
                         "Could not filter software information",
                         free_software_array(info, n));
+  uint n_filtered = (uint)ret_filtered;
 
   if (n_filtered == 0) {
     free_software_array(info, n);

@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
+
     - name: Install Libraries
       run: |
         sudo apt-get update
@@ -41,7 +43,16 @@ jobs:
         cd ..
         lcov -t tests/ -d impl/ -c -o coverage.info
         genhtml -o report coverage.info
-      
+    
+    - name: Upload Report to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        files: ${{github.workspace}}/build/coverage.info
+        name: codecov_hw1
+        fail_ci_if_error: false 
+        verbose: true 
+    
     - name: Linters, Formatting
       run: |
         clang-format -i impl/*.[h,c] tests/*.cpp main.c
