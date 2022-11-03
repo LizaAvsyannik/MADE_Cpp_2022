@@ -100,7 +100,15 @@ Matrix<T, m, n>::Matrix(T elem, bool is_column_major) {
 template <class T, size_t m, size_t n>
 Matrix<T, m, n>::Matrix(const std::array<T, m * n> &arr, bool is_column_major) {
   this->is_column_major_ = is_column_major;
-  this->matrix_ = arr;
+  if (!this->is_column_major_) {
+    this->matrix_ = arr;
+  } else {
+    for (size_t i = 0; i < m; ++i) {
+      for (size_t j = 0; j < n; ++j) {
+        this->matrix_[j * m + i] = arr[i * n + j];
+      }
+  }
+}
 }
 
 template <class T, size_t m, size_t n>
@@ -245,7 +253,7 @@ Matrix<T, m, 1> Matrix<T, m, n>::GetDiag(bool main) const {
       }
     }
   }
-  Matrix<T, m, 1> diag(elements, m);
+  Matrix<T, m, 1> diag(elements);
   return diag;
 }
 
@@ -261,7 +269,7 @@ Matrix<T, 1, n> Matrix<T, m, n>::GetRow(const size_t row_index) const {
       elements[i] = this->matrix_[row_index * n + i];
     }
   }
-  Matrix<T, 1, n> row(elements, n);
+  Matrix<T, 1, n> row(elements);
   return row;
 }
 
@@ -277,7 +285,7 @@ Matrix<T, m, 1> Matrix<T, m, n>::GetCol(const size_t column_index) const {
       elements[i] = this->matrix_[i * n + column_index];
     }
   }
-  Matrix<T, m, 1> column(elements, m);
+  Matrix<T, m, 1> column(elements);
   return column;
 }
 
@@ -600,7 +608,7 @@ Matrix<T, m, k> Matrix<T, m, n>::MatMul(const Matrix<T, n, k> &other) const {
       }
     }
   }
-  Matrix<T, m, k> mult(elements, m * k);
+  Matrix<T, m, k> mult(elements);
   return mult;
 }
 
