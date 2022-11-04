@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <vector>
 
-#define EPS 1e-6
+#define EPS 1e-12
 
 template <class T, size_t m, size_t n> class Matrix;
 
