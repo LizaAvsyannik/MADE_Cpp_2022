@@ -24,7 +24,7 @@ genhtml -o report coverage.info
 The main class is `Matrix`, which allows to work with double/float MxN matrices and vectors being implemented as 1xN and Mx1 matrices. Dimension of matrices is set using template parameters. 
 
 ### FUNCTIONALITY
-| **INITIALIZERS**                                         | **Explanation**                                          |
+| **Initializers**                                         | **Explanation**                                          |
 |:--------------------------------------------------------:|:--------------------------------------------------------:|
 | ```Matrix<T, m, n> matrix(arr, true);```                 | From std::array<T, m * n> of numbers, bool flag to store in column major if true|
 | ```Matrix<T, m, n> matrix_from_row_vectors(arr)```       | From std::array of vectors 1xN                           |
@@ -50,10 +50,10 @@ The main class is `Matrix`, which allows to work with double/float MxN matrices 
 
 | **Vector Translation**                              | **Explanation**                                          |  
 |:--------------------------------------------------------:|:--------------------------------------------------------:|
-| ```matrix += vector```                  | Adds vector<T, 1, n> from each row                               |
-| ```matrix += vector```                  | Adds vector<T, m, 1> from each column                            |   
-|```matrix -= vector```                   | Substracts vector<T, 1, n> from each row                        |
-| ```matrix -= vector```                  | Substracts vector<T, m, 1> from each column                     |
+| ```matrix += row_vector```                  | Adds vector<T, 1, n> from each row                               |
+| ```matrix += col_vector```                  | Adds vector<T, m, 1> from each column                            |   
+|```matrix -= row_vector```                   | Substracts vector<T, 1, n> from each row                        |
+| ```matrix -= col_vector```                  | Substracts vector<T, m, 1> from each column                     |
 
 
 | **Operations with Numbers**                              | **Explanation**                                          |  
