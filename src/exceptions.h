@@ -1,3 +1,4 @@
+#pragma once
 #include <stdexcept>
 
 class SingularMatrixException : public std::exception {

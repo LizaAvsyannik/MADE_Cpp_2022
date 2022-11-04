@@ -1,11 +1,14 @@
 #pragma once
 #include "exceptions.h"
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
+
+#define EPS 1e-6
 
 template <class T, size_t m, size_t n> class Matrix;
 
@@ -40,10 +43,10 @@ template <class T, size_t m, size_t n> class Matrix {
   explicit Matrix(const std::array<T, m * n> &arr,
                   bool is_column_major = false);
 
-  Matrix(const std::array<Matrix<T, 1, n>, m> &arr);
+  explicit Matrix(const std::array<Matrix<T, 1, n>, m> &arr);
   template <bool condition = (m != 1),
             typename std::enable_if_t<condition, bool> = true>
-  Matrix(const std::array<Matrix<T, m, 1>, n> &arr);
+  explicit Matrix(const std::array<Matrix<T, m, 1>, n> &arr);
 
   Matrix(const Matrix<T, m, n> &obj);
 
@@ -87,6 +90,8 @@ template <class T, size_t m, size_t n> class Matrix {
 
   template <size_t row_start, size_t row_end, size_t col_start, size_t col_end>
   Matrix<T, row_end - row_start, col_end - col_start> Slice() const;
+
+  ~Matrix() = default;
 };
 
 template <class T, size_t m, size_t n>
@@ -107,8 +112,8 @@ Matrix<T, m, n>::Matrix(const std::array<T, m * n> &arr, bool is_column_major) {
       for (size_t j = 0; j < n; ++j) {
         this->matrix_[j * m + i] = arr[i * n + j];
       }
+    }
   }
-}
 }
 
 template <class T, size_t m, size_t n>
@@ -149,7 +154,7 @@ const std::array<T, m * n> &Matrix<T, m, n>::GetMatrix() const {
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> &Matrix<T, m, n>::ToRowMajor() {
-  if (!this->is_column_major_)
+  if (!this->is_column_major_ || m == 1 || n == 1)
     return *this;
   std::array<T, m * n> elements;
   for (size_t i = 0; i < m; ++i) {
@@ -157,12 +162,13 @@ Matrix<T, m, n> &Matrix<T, m, n>::ToRowMajor() {
       elements[i * n + j] = this->matrix_[j * m + i];
   }
   this->matrix_ = elements;
+  this->is_column_major_ = false;
   return *this;
 }
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> &Matrix<T, m, n>::ToColumnMajor() {
-  if (this->is_column_major_)
+  if (this->is_column_major_ || m == 1 || n == 1)
     return *this;
   std::array<T, m * n> elements;
   for (size_t i = 0; i < m; ++i) {
@@ -170,6 +176,7 @@ Matrix<T, m, n> &Matrix<T, m, n>::ToColumnMajor() {
       elements[j * m + i] = this->matrix_[i * n + j];
   }
   this->matrix_ = elements;
+  this->is_column_major_ = true;
   return *this;
 }
 
@@ -413,7 +420,7 @@ template <class T, size_t m, size_t n>
 Matrix<T, m, n> &Matrix<T, m, n>::operator*=(const Matrix &other) {
   if (this->is_column_major_ == other.is_column_major_) {
     for (size_t i = 0; i < this->kSize; ++i) {
-      this->matrix_[i] += other.matrix_[i];
+      this->matrix_[i] *= other.matrix_[i];
     }
   } else if (this->is_column_major_) {
     for (size_t i = 0; i < m; ++i) {
@@ -670,9 +677,6 @@ template <class T, size_t m, size_t n> T Matrix<T, m, n>::Det() {
   T det = 1;
   for (size_t i = 0; i < m; ++i) {
     det *= this->u_[i * m + i];
-    if (det == 0) {
-      return det;
-    }
   }
   return det;
 }
@@ -698,7 +702,8 @@ Matrix<T, m, n> Matrix<T, m, n>::Inverse() {
   static_assert(m == n, "Matrix is not square");
 
   LUDecomposition();
-  if (this->Det() == 0) {
+
+  if (std::fabs(this->Det()) < EPS) {
     throw SingularMatrixException();
   }
 
@@ -755,7 +760,7 @@ Matrix<T, m, n>::Slice() const {
   if (this->is_column_major_) {
     for (size_t j = col_start; j < col_end; ++j) {
       for (size_t i = row_start; i < row_end; ++i) {
-        elements[index] = this->matrix_[j * n + i];
+        elements[index] = this->matrix_[i * n + j];
         ++index;
       }
     }
