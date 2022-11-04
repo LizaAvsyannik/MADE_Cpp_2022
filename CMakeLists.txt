@@ -25,5 +25,3 @@ if (WITH_CLANG_TIDY)
     -header-filter=${CMAKE_CURRENT_SOURCE_DIR};
   )
 endif()
-
-add_executable(hw2_main main.cpp)

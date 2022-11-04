@@ -39,7 +39,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         cd tests/
-        ctest -C ${{env.BUILD_TYPE}}
+        ctest -C
         cd ..
         lcov --include ${{github.workspace}}/src/\*  -t tests/ -d tests/ -c -o coverage.info
         genhtml -o report coverage.info

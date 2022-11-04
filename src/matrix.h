@@ -38,6 +38,8 @@ template <class T, size_t m, size_t n> class Matrix {
   template <size_t k, size_t l>
   Matrix &Translate(const Matrix<T, k, l> &other, bool positive = true);
 
+  void LUDecomposition();
+
  public:
   explicit Matrix(T elem, bool is_column_major = false);
   explicit Matrix(const std::array<T, m * n> &arr,
@@ -84,7 +86,6 @@ template <class T, size_t m, size_t n> class Matrix {
   Matrix<T, m, k> MatMul(const Matrix<T, n, k> &other) const;
   Matrix<T, n, m> Transpose() const;
 
-  void LUDecomposition();
   T Det();
   Matrix Inverse();
 
@@ -661,13 +662,6 @@ template <class T, size_t m, size_t n> void Matrix<T, m, n>::LUDecomposition() {
       }
     }
   }
-  // for (size_t i = 0; i < m * n; ++i) {
-  //     std::cout << this->l_[i] <<' ';
-  // }
-  // for (size_t i = 0; i < m * n; ++i) {
-  //     std::cout << this->u_[i] <<' ';
-  // }
-  // std::cout << '\n';
 }
 
 template <class T, size_t m, size_t n> T Matrix<T, m, n>::Det() {
