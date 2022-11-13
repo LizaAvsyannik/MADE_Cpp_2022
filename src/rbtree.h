@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
-#include <stdio.h>
+#include <cstdio>
 
 enum class Color { black, red };
 
