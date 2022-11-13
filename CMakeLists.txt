@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 option(SANITIZE "Enable sanitizers" OFF)
 
 add_subdirectory(src)
+add_subdirectory(tests)
 
 if (SANITIZE)
   set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak,undefined")
@@ -14,4 +15,3 @@ if (SANITIZE)
 endif()
 
 add_executable(hw3_main main.cpp)
-add_executable(hw3_main_2 main_2.cpp)

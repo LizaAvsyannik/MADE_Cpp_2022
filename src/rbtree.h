@@ -104,7 +104,7 @@ RedBlackTree<T>::RedBlackTree() {
   root_ = NIL;
   min_node_ = root_;
   max_node_ = root_;
-};
+}
 
 template <class T>
 void RedBlackTree<T>::Insert(const T &element) {
@@ -325,7 +325,7 @@ void RedBlackTree<T>::EraseNode(NodePtr<T> node, const T &element) {
     y->left->parent = y;
     y->color = z->color;
   }
-  if (y_original_color == Color::black) {
+  if (y_original_color == Color::black && x != NIL) {
     FixErase(x);
   }
 }
@@ -356,7 +356,6 @@ template <class T>
 void RedBlackTree<T>::FixErase(NodePtr<T> node) {
   NodePtr<T> s;
   while (node != root_ && node->color == Color::black) {
-
     NodePtr<T> parent = node->parent.lock();
     if (node == parent->left) {
       s = parent->right;
@@ -392,7 +391,7 @@ void RedBlackTree<T>::FixErase(NodePtr<T> node) {
         s = parent->left;
       }
 
-      if (s->right->color == Color::black && s->right->color == Color::black) {
+      if (s->left->color == Color::black && s->right->color == Color::black) {
         s->color = Color::red;
         node = parent;
       } else {

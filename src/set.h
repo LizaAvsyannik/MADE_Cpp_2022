@@ -10,8 +10,10 @@ class Set {
 
  public:
   Set() = default;
-  Set(std::initializer_list<T> list);
+  explicit Set(std::initializer_list<T> list);
   Set(const Set &other);
+  template <class InputIterator>
+  Set(InputIterator begin, InputIterator end);
   ~Set() = default;
 
   Set &operator=(const Set &other);
@@ -39,11 +41,13 @@ class Set {
 
    public:
     SetIterator() = default;
+    ~SetIterator() = default;
+
     bool operator==(const SetIterator &other) const {
       return (set_ == other.set_) && (node_ptr_ == other.node_ptr_);
     }
     bool operator!=(const SetIterator &other) const {
-      return (set_ != other.set_) || (node_ptr_ != other.node_ptr_);
+      return !(*this == other);
     }
     const T &operator*() const { return node_ptr_->data; }
     const T *operator->() const { return &node_ptr_->data; }
@@ -62,8 +66,16 @@ class Set {
 
 template <class T>
 Set<T>::Set(std::initializer_list<T> list) {
-  for (const T &element : list) {
+  for (T element : list) {
     rbtree_.Insert(element);
+  }
+}
+
+template <class T>
+template <class InputIterator>
+Set<T>::Set(InputIterator begin, InputIterator end) {
+  for (InputIterator it = begin; it != end; ++it) {
+    rbtree_.Insert(*it);
   }
 }
 
