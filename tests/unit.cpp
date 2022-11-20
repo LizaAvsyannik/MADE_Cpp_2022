@@ -143,5 +143,3 @@ TEST(SET, LowerBound) {
   EXPECT_EQ(*set.lower_bound(0), 1);
   EXPECT_TRUE(set.lower_bound(8) == set.end());
 }
-
-TEST(SET, CompareTimeWithSTL) {}

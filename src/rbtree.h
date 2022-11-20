@@ -23,18 +23,15 @@ template <class T>
 class RedBlackTree {
  private:
   NodePtr<T> root_;
-  NodePtr<T> NIL;
-  NodePtr<T> min_node_;
-  NodePtr<T> max_node_;
   size_t size_ = 0;
 
-  void EraseNode(NodePtr<T> node, const T &element);
+  void EraseNode(ConstNodePtr<T> node);
   void FixInsert(NodePtr<T> node);
-  void FixErase(NodePtr<T> node);
+  void FixErase(NodePtr<T> x, NodePtr<T> xp);
 
   void RotateLeft(NodePtr<T> node);
   void RotateRight(NodePtr<T> node);
-  void RBTransplant(NodePtr<T> node, NodePtr<T> v);
+  NodePtr<T> RBTransplant(ConstNodePtr<T> node, NodePtr<T> v);
 
   NodePtr<T> CopyNodes(const NodePtr<T> &node, const NodePtr<T> &new_parent);
   NodePtr<T> Min(NodePtr<T> node) const;
@@ -43,7 +40,7 @@ class RedBlackTree {
   ConstNodePtr<T> FindLowerBound(ConstNodePtr<T> node, const T &element) const;
 
   void printHelper(NodePtr<T> root, std::string indent, bool last) {
-    if (root != NIL) {
+    if (root) {
       std::cout << indent;
       if (last) {
         std::cout << "R----";
@@ -62,7 +59,7 @@ class RedBlackTree {
   }
 
   void inOrderHelper(NodePtr<T> node) const {
-    if (node != NIL) {
+    if (node) {
       inOrderHelper(node->left);
       std::cout << node->data << " ";
       inOrderHelper(node->right);
@@ -70,8 +67,6 @@ class RedBlackTree {
   }
 
  public:
-  RedBlackTree();
-  ~RedBlackTree() = default;
 
   void Insert(const T &element);
   void Erase(const T &element);
@@ -96,40 +91,16 @@ class RedBlackTree {
 };
 
 template <class T>
-RedBlackTree<T>::RedBlackTree() {
-  NIL = std::make_shared<Node<T>>();
-  NIL->color = Color::black;
-  NIL->left = nullptr;
-  NIL->right = nullptr;
-  root_ = NIL;
-  min_node_ = root_;
-  max_node_ = root_;
-}
-
-template <class T>
 void RedBlackTree<T>::Insert(const T &element) {
   NodePtr<T> node = std::make_shared<Node<T>>();
   node->data = element;
-  node->left = NIL;
-  node->right = NIL;
   node->color = Color::red;
   ++size_;
-
-  if (size_ == 1) {
-    min_node_ = node;
-    max_node_ = node;
-  } else {
-    if (node->data < min_node_->data) {
-      min_node_ = node;
-    } else if (max_node_->data < node->data) {
-      max_node_ = node;
-    }
-  }
 
   NodePtr<T> y = nullptr;
   NodePtr<T> x(root_);
 
-  while (x != NIL) {
+  while (x) {
     y = x;
     if (node->data < x->data) {
       x = x->left;
@@ -150,63 +121,57 @@ void RedBlackTree<T>::Insert(const T &element) {
     y->right = node;
   }
 
-  NodePtr<T> parent = node->parent.lock();
-  if (parent == nullptr) {
-    node->color = Color::black;
-    return;
-  }
-
-  NodePtr<T> grand_parent = parent->parent.lock();
-  if (grand_parent == nullptr) {
-    return;
-  }
-
   FixInsert(node);
 }
 
 template <class T>
 void RedBlackTree<T>::FixInsert(NodePtr<T> node) {
-  NodePtr<T> u;
   NodePtr<T> parent = node->parent.lock();
-  while (parent->color == Color::red) {
+  while (parent && parent->color == Color::red) {
     NodePtr<T> grand_parent = parent->parent.lock();
-    if (parent == grand_parent->right) {
-      u = grand_parent->left;
-      if (u->color == Color::red) {
+    if (parent == grand_parent->left) {
+      NodePtr<T> u = grand_parent->right;
+      if (u && u->color == Color::red) {
         u->color = Color::black;
         parent->color = Color::black;
         grand_parent->color = Color::red;
-        node = grand_parent;
-      } else {
-        if (node == parent->left) {
-          node = parent;
-          RotateRight(node);
-        }
-        parent->color = Color::black;
-        grand_parent->color = Color::red;
-        RotateLeft(grand_parent);
-      }
-    } else {
-      u = grand_parent->right;
-
-      if (u->color == Color::red) {
-        u->color = Color::black;
-        parent->color = Color::black;
-        grand_parent->color = Color::red;
-        node = grand_parent;
+        parent = grand_parent->parent.lock();
       } else {
         if (node == parent->right) {
-          node = parent;
-          RotateLeft(node);
+          RotateLeft(grand_parent->left);
+          parent = grand_parent->left;
         }
         parent->color = Color::black;
         grand_parent->color = Color::red;
-        RotateRight(grand_parent);
+        NodePtr<T> grand_grand_parent = grand_parent->parent.lock();
+        if (!grand_grand_parent) {
+          RotateRight(root_);
+        } else {
+          RotateRight(grand_parent);
+        }
       }
-    }
-    if (node == root_) {
-      break;
-    }
+    } else {
+      NodePtr<T> u = grand_parent->left;
+      if (u && u->color == Color::red) {
+        u->color = Color::black;
+        parent->color = Color::black;
+        grand_parent->color = Color::red;
+        parent = grand_parent->parent.lock();
+      } else {
+        if (node == parent->left) {
+          RotateRight(grand_parent->right);
+          parent = grand_parent->right;
+        }
+        parent->color = Color::black;
+        grand_parent->color = Color::red;
+        NodePtr<T> grand_grand_parent = grand_parent->parent.lock();
+        if (!grand_grand_parent) {
+          RotateLeft(root_);
+        } else {
+          RotateLeft(grand_parent);
+        }
+      }
+    } 
   }
   root_->color = Color::black;
 }
@@ -215,13 +180,13 @@ template <class T>
 void RedBlackTree<T>::RotateLeft(NodePtr<T> node) {
   NodePtr<T> y = node->right;
   node->right = y->left;
-  if (y->left != NIL) {
-    y->left->parent = node;
+  if (node->right) {
+    node->right->parent = node;
   }
   y->parent = node->parent;
 
   NodePtr<T> parent = node->parent.lock();
-  if (parent == nullptr) {
+  if (!parent) {
     root_ = y;
   } else if (node == parent->left) {
     parent->left = y;
@@ -236,13 +201,13 @@ template <class T>
 void RedBlackTree<T>::RotateRight(NodePtr<T> node) {
   NodePtr<T> y = node->left;
   node->left = y->right;
-  if (y->right != NIL) {
-    y->right->parent = node;
+  if (node->left) {
+    node->left->parent = node;
   }
   y->parent = node->parent;
 
   NodePtr<T> parent = node->parent.lock();
-  if (parent == nullptr) {
+  if (!parent) {
     root_ = y;
   } else if (node == parent->right) {
     parent->right = y;
@@ -255,87 +220,63 @@ void RedBlackTree<T>::RotateRight(NodePtr<T> node) {
 
 template <class T>
 void RedBlackTree<T>::Erase(const T &element) {
-  EraseNode(root_, element);
+  ConstNodePtr<T> node = Find(element);
+  EraseNode(node);
 }
 
 template <class T>
-void RedBlackTree<T>::EraseNode(NodePtr<T> node, const T &element) {
-  NodePtr<T> z(NIL);
-  NodePtr<T> x, y;
-  while (node != NIL) {
-    if (!(node->data < element) && !(element < node->data)) {
-      --size_;
-      if (size_ == 0) {
-        min_node_ = NIL;
-        max_node_ = NIL;
-      } else {
-        if ((!(min_node_->data < element) && !(element < min_node_->data))) {
-          if (min_node_ == root_) {
-            min_node_ = root_->right;
-          } else {
-            min_node_ = min_node_->parent.lock();
-          }
-        } else if ((!(max_node_->data < element) &&
-                    !(element < max_node_->data))) {
-          if (max_node_ == root_) {
-            max_node_ = root_->left;
-          } else {
-            max_node_ = max_node_->parent.lock();
-          }
-        }
-      }
-      z = node;
-    }
-
-    if (!(element < node->data)) {
-      node = node->right;
-    } else {
-      node = node->left;
-    }
-  }
-
-  if (z == NIL) {
+void RedBlackTree<T>::EraseNode(ConstNodePtr<T> node) {
+  if (!node) {
     return;
   }
+  Color orig_color = node->color;
+  NodePtr<T> x, parent;
 
-  y = z;
-  Color y_original_color = y->color;
-  if (z->left == NIL) {
-    x = z->right;
-    RBTransplant(z, z->right);
-  } else if (z->right == NIL) {
-    x = z->left;
-    RBTransplant(z, z->left);
+  if (!node->left) {
+    x = node->right;
+    parent = node->parent.lock();
+    RBTransplant(node, x);
+  } else if (!node->right) {
+    x = node->left;
+    parent = node->parent.lock();
+    RBTransplant(node, x);
   } else {
-    y = Min(z->right);
-    y_original_color = y->color;
+    NodePtr<T> y = Min(node->right);
+    orig_color = y->color;
     x = y->right;
-
-    NodePtr<T> y_parent = y->parent.lock();
-    if (y_parent == z) {
-      x->parent = y;
+    parent = y;
+    if (y->parent.lock() == node) {
+      if (x) {
+        x->parent = y;
+      }
+      NodePtr<T> pz = RBTransplant(node, node->right);
+      y->left = pz->left;
+      y->left->parent = y;
+      y->color = pz->color;
     } else {
-      RBTransplant(y, y->right);
-      y->right = z->right;
-      y->right->parent = y;
+      parent = y->parent.lock();
+      NodePtr<T> py = RBTransplant(y, y->right);
+      py->right = node->right;
+      py->right->parent = py;
+      NodePtr<T> pz = RBTransplant(node, py);
+      py->left = pz->left;
+      py->left->parent = py;
+      py->color = pz->color;
     }
+  }
 
-    RBTransplant(z, y);
-    y->left = z->left;
-    y->left->parent = y;
-    y->color = z->color;
+  if (orig_color == Color::black) {
+    FixErase(x, parent);
   }
-  if (y_original_color == Color::black && x != NIL) {
-    FixErase(x);
-  }
+  --size_;
 }
 
 template <class T>
 NodePtr<T> RedBlackTree<T>::Min(NodePtr<T> node) const {
-  if (node == NIL) {
-    return NIL;
+  if (!node) {
+    return node;
   }
-  while (node->left != NIL) {
+  while (node->left) {
     node = node->left;
   }
   return node;
@@ -343,87 +284,99 @@ NodePtr<T> RedBlackTree<T>::Min(NodePtr<T> node) const {
 
 template <class T>
 NodePtr<T> RedBlackTree<T>::Max(NodePtr<T> node) const {
-  if (node == NIL) {
-    return NIL;
+  if (!node) {
+    return node;
   }
-  while (node->right != NIL) {
+  while (node->right) {
     node = node->right;
   }
   return node;
 }
 
 template <class T>
-void RedBlackTree<T>::FixErase(NodePtr<T> node) {
-  NodePtr<T> s;
-  while (node != root_ && node->color == Color::black) {
-    NodePtr<T> parent = node->parent.lock();
-    if (node == parent->left) {
-      s = parent->right;
-      if (s->color == Color::red) {
-        s->color = Color::black;
-        parent->color = Color::red;
-        RotateLeft(parent);
-        s = parent->right;
+void RedBlackTree<T>::FixErase(NodePtr<T> x, NodePtr<T> xp) {
+  while (x != root_ && (!x || x->color == Color::black)) {
+    if (x == xp->left) {
+      NodePtr<T> w = xp->right;
+      if (w && w->color == Color::red) {
+        w->color = Color::black;
+        xp->color = Color::red;
+        RotateLeft(xp);
+        w = xp->right;
       }
-      if (s->left->color == Color::black && s->right->color == Color::black) {
-        s->color = Color::red;
-        node = parent;
+      if (w && (!w->left || w->left->color == Color::black) &&
+          (!w->right || w->right->color == Color::black)) {
+        w->color = Color::red;
+        x = xp;
+        xp = xp->parent.lock();
       } else {
-        if (s->right->color == Color::black) {
-          s->left->color = Color::black;
-          s->color = Color::red;
-          RotateRight(s);
-          s = parent->right;
+        if (w) {
+          if (!w->right || w->right->color == Color::black) {
+            w->left->color = Color::black;
+            w->color = Color::red;
+            RotateRight(w);
+            w = xp->right;
+          }
+          w->color = xp->color;
+          xp->color = Color::black;
+          w->right->color = Color::black;
+          RotateLeft(xp);
         }
-
-        s->color = parent->color;
-        parent->color = Color::black;
-        s->right->color = Color::black;
-        RotateLeft(parent);
-        node = root_;
+        x = root_;
       }
     } else {
-      s = parent->left;
-      if (s->color == Color::red) {
-        s->color = Color::black;
-        parent->color = Color::red;
-        RotateRight(parent);
-        s = parent->left;
+      NodePtr<T> w = xp->left;
+      if (w && w->color == Color::red) {
+        w->color = Color::black;
+        xp->color = Color::red;
+        RotateRight(xp);
+        w = xp->left;
       }
-
-      if (s->left->color == Color::black && s->right->color == Color::black) {
-        s->color = Color::red;
-        node = parent;
+      if (w && (!w->left || w->left->color == Color::black) &&
+          (!w->right || w->right->color == Color::black)) {
+        w->color = Color::red;
+        x = xp;
+        xp = xp->parent.lock();
       } else {
-        if (s->left->color == Color::black) {
-          s->right->color = Color::black;
-          s->color = Color::red;
-          RotateLeft(s);
-          s = parent->left;
+        if (w) {
+          if (!w->left || w->left->color == Color::black) {
+            w->right->color = Color::black;
+            w->color = Color::red;
+            RotateLeft(w);
+            w = xp->left;
+          }
+          w->color = xp->color;
+          xp->color = Color::black;
+          w->left->color = Color::black;
+          RotateRight(xp);
         }
-
-        s->color = parent->color;
-        parent->color = Color::black;
-        s->left->color = Color::black;
-        RotateRight(parent);
-        node = root_;
+        x = root_;
       }
     }
   }
-  node->color = Color::black;
+  if (x) {
+    x->color = Color::black;
+  }
 }
 
 template <class T>
-void RedBlackTree<T>::RBTransplant(NodePtr<T> u, NodePtr<T> v) {
+NodePtr<T> RedBlackTree<T>::RBTransplant(ConstNodePtr<T> u, NodePtr<T> v) {
+  if (v) {
+    v->parent = u->parent;
+  }
+  NodePtr<T> w = nullptr;
   NodePtr<T> u_parent = u->parent.lock();
   if (u_parent == nullptr) {
+    w = root_;
     root_ = v;
   } else if (u == u_parent->left) {
+    w = u_parent->left;
     u_parent->left = v;
   } else {
+    w = u_parent->right;
     u_parent->right = v;
   }
-  v->parent = u->parent;
+  return w;
 }
 
 template <class T>
@@ -434,17 +387,16 @@ size_t RedBlackTree<T>::Size() const {
 template <class T>
 void RedBlackTree<T>::Copy(const RedBlackTree &other) {
   size_ = other.size_;
-  NIL = other.NIL;
-  root_ = CopyNodes(other.root_, other.root_->parent.lock());
-  min_node_ = Min(root_);
-  max_node_ = Max(root_);
+  if (other.root_) {
+    root_ = CopyNodes(other.root_, other.root_->parent.lock());
+  }
 }
 
 template <class T>
 NodePtr<T> RedBlackTree<T>::CopyNodes(const NodePtr<T> &node,
                                       const NodePtr<T> &new_parent) {
-  if (node == NIL) {
-    return NIL;
+  if (!node) {
+    return node;
   } else {
     NodePtr<T> new_node = std::make_shared<Node<T>>();
     new_node->data = node->data;
@@ -460,20 +412,17 @@ template <class T>
 RedBlackTree<T> &RedBlackTree<T>::Swap(RedBlackTree &other) {
   std::swap(size_, other.size_);
   root_.swap(other.root_);
-  min_node_.swap(other.min_node_);
-  max_node_.swap(other.max_node_);
-  NIL.swap(other.NIL);
   return *this;
 }
 
 template <class T>
 NodePtr<T> RedBlackTree<T>::GetMin() const {
-  return min_node_;
+  return Min(root_);
 }
 
 template <class T>
 NodePtr<T> RedBlackTree<T>::GetMax() const {
-  return max_node_;
+  return Max(root_);
 }
 
 template <class T>
@@ -489,7 +438,7 @@ ConstNodePtr<T> RedBlackTree<T>::LowerBound(const T &element) const {
 template <class T>
 ConstNodePtr<T> RedBlackTree<T>::FindElement(ConstNodePtr<T> node,
                                              const T &element) const {
-  if (node == NIL || (!(node->data < element) && !(element < node->data))) {
+  if (!node || (!(node->data < element) && !(element < node->data))) {
     return node;
   }
   if (element < node->data) {
@@ -501,26 +450,28 @@ ConstNodePtr<T> RedBlackTree<T>::FindElement(ConstNodePtr<T> node,
 template <class T>
 ConstNodePtr<T> RedBlackTree<T>::FindLowerBound(ConstNodePtr<T> node,
                                                 const T &element) const {
-  if (node == NIL) {
-    return NIL;
+  if (!node) {
+    return node;
   }
-  if (!(min_node_->data < element)) {
-    return min_node_;
-  } else if (max_node_->data < element) {
-    return NIL;
+  ConstNodePtr<T> min_node = Min(root_);
+  ConstNodePtr<T> max_node = Max(root_);
+  if (!(min_node->data < element)) {
+    return min_node;
+  } else if (max_node->data < element) {
+    return nullptr;
   }
   ConstNodePtr<T> subtree_lower_bound;
   if (!(node->data < element) && !(element < node->data)) {
     return node;
   } else if (element < node->data) {
     subtree_lower_bound = FindLowerBound(node->left, element);
-    if (subtree_lower_bound == NIL) {
+    if (!subtree_lower_bound) {
       return node;
     }
   } else {
     subtree_lower_bound = FindLowerBound(node->right, element);
-    if (subtree_lower_bound == NIL) {
-      return NIL;
+    if (!subtree_lower_bound) {
+      return nullptr;
     }
   }
   return subtree_lower_bound;
@@ -528,31 +479,31 @@ ConstNodePtr<T> RedBlackTree<T>::FindLowerBound(ConstNodePtr<T> node,
 
 template <class T>
 ConstNodePtr<T> RedBlackTree<T>::Successor(ConstNodePtr<T> node) const {
-  if (node == max_node_) {
-    return NIL;
-  } else if (node->right != NIL) {
+  if (node == Max(root_)) {
+    return nullptr;
+  } else if (node->right) {
     return Min(node->right);
   }
   NodePtr<T> y = node->parent.lock();
-  while (y != nullptr && node == y->right) {
+  while (y && node == y->right) {
     node = y;
     y = y->parent.lock();
   }
-  return y ? y : NIL;
+  return y;
 }
 
 template <class T>
 ConstNodePtr<T> RedBlackTree<T>::Predecessor(ConstNodePtr<T> node) const {
-  if (node == NIL) {
-    return max_node_;
+  if (!node) {
+    return Max(root_);
   }
-  if (node->left != NIL) {
+  if (node->left) {
     return Max(node->left);
   }
   NodePtr<T> y = node->parent.lock();
-  while (y != nullptr && node == y->left) {
+  while (y && node == y->left) {
     node = y;
     y = y->parent.lock();
   }
-  return y ? y : NIL;
+  return y;
 }
