@@ -21,6 +21,7 @@ genhtml -o report coverage.info
 ```
 
 ### TO RUN PERFOMANCE TEST (COMPARISON WITH STL SET<T>)
+```
 cmake . -B build
 cmake --build build
 build/hw3_perfomance
