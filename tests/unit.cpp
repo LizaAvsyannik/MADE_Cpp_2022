@@ -1,6 +1,5 @@
 #include "src/set.h"
 #include <chrono>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 TEST(SET, CopyConstructor) {

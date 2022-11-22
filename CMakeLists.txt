@@ -29,4 +29,4 @@ if (WITH_CLANG_TIDY)
   )
 endif()
 
-add_executable(hw3_main main.cpp)
+add_executable(hw3_perfomance perfomance_measure.cpp)

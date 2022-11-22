@@ -20,7 +20,11 @@ lcov --include <full_path_project>/src/\*  -t tests/ -d tests/ -c -o coverage.in
 genhtml -o report coverage.info
 ```
 
+### TO RUN PERFOMANCE TEST (COMPARISON WITH STL SET<T>)
+cmake . -B build
+cmake --build build
+build/hw3_perfomance
+```
+
 ### ABOUT
 Analogue of STL Set<T> implemented using Red Black Tree.
-
-### FUNCTIONALITY

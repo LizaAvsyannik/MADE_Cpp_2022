@@ -1,7 +1,7 @@
 #pragma once
+#include <cstdio>
 #include <iostream>
 #include <memory>
-#include <cstdio>
 
 enum class Color { black, red };
 
@@ -39,35 +39,7 @@ class RedBlackTree {
   ConstNodePtr<T> FindElement(ConstNodePtr<T> node, const T &element) const;
   ConstNodePtr<T> FindLowerBound(ConstNodePtr<T> node, const T &element) const;
 
-  void printHelper(NodePtr<T> root, std::string indent, bool last) {
-    if (root) {
-      std::cout << indent;
-      if (last) {
-        std::cout << "R----";
-        indent += "   ";
-      } else {
-        std::cout << "L----";
-        indent += "|  ";
-      }
-
-      std::string sColor = bool(root->color) ? "RED" : "BLACK";
-      std::cout << '(' << root->data << ')' << "(" << sColor << ")"
-                << std::endl;
-      printHelper(root->left, indent, false);
-      printHelper(root->right, indent, true);
-    }
-  }
-
-  void inOrderHelper(NodePtr<T> node) const {
-    if (node) {
-      inOrderHelper(node->left);
-      std::cout << node->data << " ";
-      inOrderHelper(node->right);
-    }
-  }
-
  public:
-
   void Insert(const T &element);
   void Erase(const T &element);
 
@@ -82,12 +54,6 @@ class RedBlackTree {
   ConstNodePtr<T> LowerBound(const T &element) const;
   ConstNodePtr<T> Successor(ConstNodePtr<T> node) const;
   ConstNodePtr<T> Predecessor(ConstNodePtr<T> node) const;
-
-  void printTree() {
-    if (root_) {
-      printHelper(root_, "", true);
-    }
-  }
 };
 
 template <class T>
@@ -171,7 +137,7 @@ void RedBlackTree<T>::FixInsert(NodePtr<T> node) {
           RotateLeft(grand_parent);
         }
       }
-    } 
+    }
   }
   root_->color = Color::black;
 }

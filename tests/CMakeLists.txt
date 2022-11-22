@@ -22,7 +22,6 @@ if (WITH_COVERAGE)
 endif()
 
 target_link_libraries(unit_tests GTest::gtest_main)
-target_link_libraries(unit_tests GTest::gmock_main)
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)

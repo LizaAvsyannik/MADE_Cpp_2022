@@ -1,9 +1,8 @@
 #include "src/set.h"
-#include <iostream>
-#include <vector>
-#include <set>
 #include <chrono>
+#include <iostream>
 #include <random>
+#include <set>
 
 using std::chrono::duration_cast;
 using nanoseconds = std::chrono::nanoseconds;
@@ -13,13 +12,9 @@ using duration = std::chrono::duration<long, std::nano>;
 
 static time_point start;
 
-void Tick() {
-  start = sclock::now();
-}
+void Tick() { start = sclock::now(); }
 
-duration Tock() {
-  return duration_cast<nanoseconds>(sclock::now() - start);
-}
+duration Tock() { return duration_cast<nanoseconds>(sclock::now() - start); }
 
 struct TimeStatistics {
   double initial_insert;
@@ -28,7 +23,7 @@ struct TimeStatistics {
   double avg_find;
   double avg_erase;
 
-  TimeStatistics& operator+=(const TimeStatistics& stats) {
+  TimeStatistics &operator+=(const TimeStatistics &stats) {
     initial_insert += stats.initial_insert;
     final_erase += stats.final_erase;
     avg_insert += stats.avg_insert;
@@ -94,7 +89,7 @@ void TestPerformance(int n_elements) {
 }
 
 int main() {
-  std::cout << "My set\n\n";
+  std::cout << "Custom set\n\n";
   for (int n : {100, 1000, 10000, 100000}) {
     TestPerformance<Set<int>>(n);
   }

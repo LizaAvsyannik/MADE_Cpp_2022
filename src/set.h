@@ -25,8 +25,6 @@ class Set {
   size_t size() const;
   bool empty() const;
 
-  void print();
-
   class SetIterator : public std::iterator<std::bidirectional_iterator_tag, T> {
    private:
     friend class Set;
@@ -116,11 +114,6 @@ size_t Set<T>::size() const {
 template <class T>
 bool Set<T>::empty() const {
   return rbtree_.Size() == 0;
-}
-
-template <class T>
-void Set<T>::print() {
-  rbtree_.printTree();
 }
 
 template <class T>

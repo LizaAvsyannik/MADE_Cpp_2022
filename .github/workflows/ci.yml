@@ -68,7 +68,7 @@ jobs:
         rm -rf ${{github.workspace}}/build
         cmake -B ${{github.workspace}}/build
     
-    - name: Build (Valgrind)
+    - name: Build (Valgrind and Perfomance)
       run: cmake --build ${{github.workspace}}/build
 
     - name: Valgrind
@@ -76,3 +76,8 @@ jobs:
       run: |
         valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/unit_tests
         valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s tests/test_set
+  
+    - name: Perfomance
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ./hw3_perfomance
