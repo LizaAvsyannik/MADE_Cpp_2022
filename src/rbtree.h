@@ -27,11 +27,11 @@ class RedBlackTree {
 
   void EraseNode(ConstNodePtr<T> node);
   void FixInsert(NodePtr<T> node);
-  void FixErase(NodePtr<T> x, NodePtr<T> xp);
+  void FixErase(NodePtr<T> node, NodePtr<T> node_parent);
 
   void RotateLeft(NodePtr<T> node);
   void RotateRight(NodePtr<T> node);
-  NodePtr<T> RBTransplant(ConstNodePtr<T> node, NodePtr<T> v);
+  NodePtr<T> RBTransplant(ConstNodePtr<T> u, NodePtr<T> v);
 
   NodePtr<T> CopyNodes(const NodePtr<T> &node, const NodePtr<T> &new_parent);
   NodePtr<T> Min(NodePtr<T> node) const;
@@ -260,68 +260,68 @@ NodePtr<T> RedBlackTree<T>::Max(NodePtr<T> node) const {
 }
 
 template <class T>
-void RedBlackTree<T>::FixErase(NodePtr<T> x, NodePtr<T> xp) {
-  while (x != root_ && (!x || x->color == Color::black)) {
-    if (x == xp->left) {
-      NodePtr<T> w = xp->right;
+void RedBlackTree<T>::FixErase(NodePtr<T> node, NodePtr<T> node_parent) {
+  while (node != root_ && (!node || node->color == Color::black)) {
+    if (node == node_parent->left) {
+      NodePtr<T> w = node_parent->right;
       if (w && w->color == Color::red) {
         w->color = Color::black;
-        xp->color = Color::red;
-        RotateLeft(xp);
-        w = xp->right;
+        node_parent->color = Color::red;
+        RotateLeft(node_parent);
+        w = node_parent->right;
       }
       if (w && (!w->left || w->left->color == Color::black) &&
           (!w->right || w->right->color == Color::black)) {
         w->color = Color::red;
-        x = xp;
-        xp = xp->parent.lock();
+        node = node_parent;
+        node_parent = node_parent->parent.lock();
       } else {
         if (w) {
           if (!w->right || w->right->color == Color::black) {
             w->left->color = Color::black;
             w->color = Color::red;
             RotateRight(w);
-            w = xp->right;
+            w = node_parent->right;
           }
-          w->color = xp->color;
-          xp->color = Color::black;
+          w->color = node_parent->color;
+          node_parent->color = Color::black;
           w->right->color = Color::black;
-          RotateLeft(xp);
+          RotateLeft(node_parent);
         }
-        x = root_;
+        node = root_;
       }
     } else {
-      NodePtr<T> w = xp->left;
+      NodePtr<T> w = node_parent->left;
       if (w && w->color == Color::red) {
         w->color = Color::black;
-        xp->color = Color::red;
-        RotateRight(xp);
-        w = xp->left;
+        node_parent->color = Color::red;
+        RotateRight(node_parent);
+        w = node_parent->left;
       }
       if (w && (!w->left || w->left->color == Color::black) &&
           (!w->right || w->right->color == Color::black)) {
         w->color = Color::red;
-        x = xp;
-        xp = xp->parent.lock();
+        node = node_parent;
+        node_parent = node_parent->parent.lock();
       } else {
         if (w) {
           if (!w->left || w->left->color == Color::black) {
             w->right->color = Color::black;
             w->color = Color::red;
             RotateLeft(w);
-            w = xp->left;
+            w = node_parent->left;
           }
-          w->color = xp->color;
-          xp->color = Color::black;
+          w->color = node_parent->color;
+          node_parent->color = Color::black;
           w->left->color = Color::black;
-          RotateRight(xp);
+          RotateRight(node_parent);
         }
-        x = root_;
+        node = root_;
       }
     }
   }
-  if (x) {
-    x->color = Color::black;
+  if (node) {
+    node->color = Color::black;
   }
 }
 
