@@ -143,7 +143,7 @@ Matrix<T, m, n>::Matrix(const Matrix &obj) {
   this->matrix_ = obj.matrix_;
   this->l_ = obj.l_;
   this->u_ = obj.u_;
-  this->is_lu_valid = this->is_lu_valid;
+  this->is_lu_valid = obj.is_lu_valid;
 }
 
 template <class T, size_t m, size_t n>
