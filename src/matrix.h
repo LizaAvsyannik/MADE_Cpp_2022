@@ -141,6 +141,9 @@ template <class T, size_t m, size_t n>
 Matrix<T, m, n>::Matrix(const Matrix &obj) {
   this->is_column_major_ = obj.is_column_major_;
   this->matrix_ = obj.matrix_;
+  this->l_ = obj.l_;
+  this->u_ = obj.u_;
+  this->is_lu_valid = this->is_lu_valid;
 }
 
 template <class T, size_t m, size_t n>
@@ -442,71 +445,17 @@ Matrix<T, m, n> &Matrix<T, m, n>::operator*=(const Matrix &other) {
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator+(const Matrix &other) const {
-  Matrix sum_matrix(*this);
-  if (this->is_column_major_ == other.is_column_major_) {
-    for (size_t i = 0; i < this->kSize; ++i) {
-      sum_matrix.matrix_[i] += other.matrix_[i];
-    }
-  } else if (this->is_column_major_) {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        sum_matrix.matrix_[j * m + i] += other.matrix_[i * n + j];
-      }
-    }
-  } else {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        sum_matrix.matrix_[i * n + j] += other.matrix_[j * m + i];
-      }
-    }
-  }
-  return sum_matrix;
+  return Matrix(*this) += other;
 }
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator-(const Matrix &other) const {
-  Matrix sub_matrix(*this);
-  if (this->is_column_major_ == other.is_column_major_) {
-    for (size_t i = 0; i < this->kSize; ++i) {
-      sub_matrix.matrix_[i] -= other.matrix_[i];
-    }
-  } else if (this->is_column_major_) {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        sub_matrix.matrix_[j * m + i] -= other.matrix_[i * n + j];
-      }
-    }
-  } else {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        sub_matrix.matrix_[i * n + j] -= other.matrix_[j * m + i];
-      }
-    }
-  }
-  return sub_matrix;
+  return Matrix(*this) -= other;
 }
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator*(const Matrix &other) const {
-  Matrix mult_matrix(*this);
-  if (this->is_column_major_ == other.is_column_major_) {
-    for (size_t i = 0; i < this->kSize; ++i) {
-      mult_matrix.matrix_[i] *= other.matrix_[i];
-    }
-  } else if (this->is_column_major_) {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        mult_matrix.matrix_[j * m + i] *= other.matrix_[i * n + j];
-      }
-    }
-  } else {
-    for (size_t i = 0; i < m; ++i) {
-      for (size_t j = 0; j < n; ++j) {
-        mult_matrix.matrix_[i * n + j] *= other.matrix_[j * m + i];
-      }
-    }
-  }
-  return mult_matrix;
+  return Matrix(*this) *= other;
 }
 
 template <class T, size_t m, size_t n>
@@ -538,29 +487,17 @@ Matrix<T, m, n> &Matrix<T, m, n>::operator*=(const T &number) {
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator+(const T &number) const {
-  Matrix sum_matrix(*this);
-  for (size_t i = 0; i < this->kSize; ++i) {
-    sum_matrix.matrix_[i] += number;
-  }
-  return sum_matrix;
+  return Matrix(*this) += number;
 }
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator-(const T &number) const {
-  Matrix sub_matrix(*this);
-  for (size_t i = 0; i < this->kSize; ++i) {
-    sub_matrix.matrix_[i] -= number;
-  }
-  return sub_matrix;
+  return Matrix(*this) -= number;
 }
 
 template <class T, size_t m, size_t n>
 Matrix<T, m, n> Matrix<T, m, n>::operator*(const T &number) const {
-  Matrix mult_matrix(*this);
-  for (size_t i = 0; i < this->kSize; ++i) {
-    mult_matrix.matrix_[i] *= number;
-  }
-  return mult_matrix;
+  return Matrix(*this) *= number;
 }
 
 template <class T, size_t m, size_t n>
@@ -701,12 +638,8 @@ Matrix<T, m, n> Matrix<T, m, n>::Inverse() {
     throw SingularMatrixException();
   }
 
-  std::array<T, m * n> inverse_l;
-  std::array<T, m * n> inverse_u;
-  for (size_t i = 0; i < this->kSize; ++i) {
-    inverse_l[i] = 0;
-    inverse_u[i] = 0;
-  }
+  std::array<T, m * n> inverse_l{};
+  std::array<T, m * n> inverse_u{};
 
   std::array<T, m * n> transposed_u;
   for (size_t i = 0; i < m; ++i) {
