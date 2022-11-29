@@ -42,7 +42,7 @@ jobs:
         ctest -C
         ./test_set
         cd ..
-        lcov --include ${{github.workspace}}/src/\*  -t tests/ -d tests/ -c -o coverage.info
+        lcov --include ${{github.workspace}}/src/set.h  -t tests/ -d tests/ -c -o coverage.info
         genhtml -o report coverage.info
     
     - name: Upload Report to Codecov
@@ -56,7 +56,7 @@ jobs:
     
     - name: Linters, Formatting
       run: |
-        clang-format -i src/set.h tests/unit.cpp
+        clang-format -i src/*.h tests/unit.cpp
         cppcheck -q --enable=all ./src/*.h --suppress=useInitializationList --suppress=missingIncludeSystem --suppress=unusedFunction --language=c++
         clang-tidy src/*.h -warnings-as-errors=* -extra-arg=-std=c++17 -p build/
         cpplint --extensions=h src/*.h
