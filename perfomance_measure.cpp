@@ -24,7 +24,7 @@ duration Tock() { return duration_cast<microseconds>(sclock::now() - start); }
 
 int main() {
   std::unique_ptr<ByteDiffCounterBase> counter;
-  if constexpr(false) {
+  if constexpr(THREADED_IMPL) {
     counter = std::make_unique<ByteDiffCounterParallel>();
   } else {
     counter = std::make_unique<ByteDiffCounterSerial>();
