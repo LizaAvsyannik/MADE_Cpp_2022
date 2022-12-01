@@ -12,13 +12,13 @@ enable_testing()
 
 add_executable(unit_tests unit.cpp)
 
-
 if (WITH_COVERAGE)
   target_compile_options(unit_tests PRIVATE -fprofile-arcs -ftest-coverage -O0)
   target_link_options(unit_tests PRIVATE -coverage -lgcov)
 endif()
 
-target_link_libraries(unit_tests hw4_counter GTest::gtest_main)
+target_link_libraries(unit_tests hw4_counter_parallel GTest::gtest_main)  
+target_link_libraries(unit_tests hw4_counter_serial GTest::gtest_main)  
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)

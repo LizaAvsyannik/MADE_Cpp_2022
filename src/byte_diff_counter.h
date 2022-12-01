@@ -61,3 +61,11 @@ inline void convert_path_to_absolute(std::string &filename) {
   std::string cwd = std::filesystem::current_path();
   filename = cwd + '/' + filename;
 }
+
+inline void ByteDiffCounterBase::write_results(std::string filename) const {
+  std::ofstream file(filename);
+  for (size_t i = 0; i < kNumDiff; ++i) {
+    file << i << ':' << counter_[i] << '\n';
+  }
+  file.close();
+}
