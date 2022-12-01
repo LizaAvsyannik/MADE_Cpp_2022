@@ -5,7 +5,7 @@
 
 int main() {
   ByteDiffCounterParallel counter;
-  counter.process_file("tests/test.txt", "tests/output.txt");
+  counter.process_file("tests/test_1.txt", "tests/output.txt");
   // std::ifstream file("tests/test.txt");
   // std::array<char, 1024 * 1024> batch;
   // while (file.read(batch.data(), 1024 * 1024)) {
