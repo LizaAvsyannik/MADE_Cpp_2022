@@ -61,8 +61,8 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
   // kMinBatchSize;
 
   boost::asio::thread_pool pool(num_threads);
-  std::cout << batch_size << ' ' << thread_batch_size << ' ' << num_threads
-            << '\n';
+  // std::cout << batch_size << ' ' << thread_batch_size << ' ' << num_threads
+  //           << '\n';
 
   std::vector<char> batch(batch_size);
   char prev_batch_last_token = '\0';
