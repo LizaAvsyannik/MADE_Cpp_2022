@@ -4,7 +4,7 @@
 
 void ByteDiffCounterParallel::update_counter(
     std::array<size_t, kNumDiff> &counter, char first_byte, char second_byte) {
-  size_t difference = (first_byte > second_byte) ? (first_byte - second_byte)
+  int difference = (first_byte > second_byte) ? (first_byte - second_byte)
                                                  : (second_byte - first_byte);
   if ((0 <= difference) && (difference < kNumDiff)) {
     ++counter[difference];
@@ -105,8 +105,8 @@ ByteDiffCounterParallel::process_batch(boost::asio::thread_pool &pool,
                                        size_t num_threads,
                                        char prev_batch_last_token) {
   std::vector<std::future<std::array<size_t, kNumDiff>>> threads_results;
-  size_t start_idx = 0;
-  size_t end_idx = 0;
+  size_t start_idx;
+  size_t end_idx;
   for (size_t i = 0; i < num_threads; ++i) {
     start_idx = thread_batch_size * i;
     end_idx = std::min(thread_batch_size * (i + 1), batch_size);

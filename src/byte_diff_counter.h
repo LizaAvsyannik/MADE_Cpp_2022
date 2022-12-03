@@ -38,8 +38,6 @@ class ByteDiffCounterSerial : public ByteDiffCounterBase {
 
 class ByteDiffCounterParallel : public ByteDiffCounterBase {
  private:
-  const size_t kMinBatchSize = 2;
-
   void update_counter(std::array<size_t, kNumDiff> &counter, char first_byte,
                       char second_byte);
   std::array<size_t, kNumDiff> count_bytes(const std::vector<char> batch,

@@ -3,7 +3,7 @@
 #include <vector>
 
 void ByteDiffCounterSerial::update_counter(char first_byte, char second_byte) {
-  size_t difference = (first_byte > second_byte) ? (first_byte - second_byte)
+  int difference = (first_byte > second_byte) ? (first_byte - second_byte)
                                                  : (second_byte - first_byte);
   if ((0 <= difference) && (difference < kNumDiff)) {
     ++counter_[difference];

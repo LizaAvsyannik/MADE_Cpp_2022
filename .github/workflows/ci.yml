@@ -1,57 +1,139 @@
-# name: CMake
+name: CMake
 
-# on:
-#   push:
-#     branches: "*"
-#   pull_request:
-#     branches: "*"
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
 
-# env:
-#   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-#   BUILD_TYPE: Release
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
 
-# jobs:
-#   build:
-#     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-#     # You can convert this to a matrix build if you need cross-platform coverage.
-#     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-#     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
 
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Install Libraries
-#       run: |
-#         sudo apt-get update
-#         sudo apt-get -y install lcov cppcheck clang-tidy clang-format valgrind
-#         sudo apt-get install python-pip 3 
-#         pip3 install cpplint  
+    - name: Install Libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install lcov cppcheck clang-tidy clang-format valgrind
+        sudo apt-get install python3-pip
+        sudo apt-get install libboost-all-dev
+        pip3 install cpplint
+        pip3 install gdown  
     
-#     - name: Configure CMake
-#       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-#       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-#       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DWITH_COVERAGE=ON -DSANITIZE=ON -WITH_CLANG_TIDY=ON
+    - name: Configure CMake (Serial)
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DWITH_COVERAGE=ON -DSANITIZE=ON -DWITH_CLANG_TIDY=ON
 
-#     - name: Build
-#       # Build your program with the given configuration
-#       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    - name: Build (Serial)
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build
 
-#     - name: Test
-#       working-directory: ${{github.workspace}}/build
-#       # Execute tests defined by the CMake configuration.  
-#       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-#       run: |
-#         cd tests/
-#         ctest -C ${{env.BUILD_TYPE}}
-#         cd ..
-#         lcov -t tests/ -d impl/ -c -o coverage.info
-#         genhtml -o report coverage.info
-      
-#     - name: Linters, Formatting
-#       run: |
-#         clang-format -i impl/*.[h,c] tests/*.cpp main.c
-#         cppcheck -q --enable=all ./impl/ --suppress=missingIncludeSystem --suppress=unusedFunction
-#         clang-tidy impl/*.[h,c] -warnings-as-errors=* -extra-arg=-std=c11 -p build/
-#         cpplint --extensions=c impl/*.c
+    - name: Test (Serial)
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: |
+        cd tests/
+        ctest -C
+        cd ..
+        lcov --include ${{github.workspace}}/src/byte_diff_counter_serial.cpp -t tests/ -d src/ -c -o coverage.info
+        genhtml -o report coverage.info
     
-#     - name: Valgrind
-#       run: valgrind --tool=memcheck --leak-check=yes -s build/hw1_main
+    - name: Upload Report to Codecov (Serial)
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        files: ${{github.workspace}}/build/coverage.info
+        name: codecov_hw4
+        fail_ci_if_error: false 
+        verbose: true 
+    
+    - name: Linters, Formatting (Serial)
+      run: |
+        clang-format -i src/*.h src/byte_diff_counter_serial.cpp tests/unit_serial.cpp
+        cppcheck -q --enable=all src/*.h src/byte_diff_counter_serial.cpp \
+          --suppress=passedByValue --suppress=variableScope \
+          --suppress=missingIncludeSystem --suppress=unusedFunction --language=c++
+        clang-tidy src/*.h src/byte_diff_counter_serial.cpp -warnings-as-errors=* -extra-arg=-std=c++17 -p build/
+        cpplint --extensions=cpp src/byte_diff_counter_serial.cpp
+    
+    - name: Configure CMake (Valgrind, Serial)
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: |
+        rm -rf ${{github.workspace}}/build
+        cmake -B ${{github.workspace}}/build
+    
+    - name: Build (Valgrind, Serial)
+      run: cmake --build ${{github.workspace}}/build
+
+    - name: Valgrind (Parallel)
+      working-directory: ${{github.workspace}}/build//tests
+      run: |
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s ./unit_tests
+
+    - name: Configure CMake (Parallel)
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: |
+        rm -rf ${{github.workspace}}/build
+        cmake -B ${{github.workspace}}/build -DWITH_COVERAGE=ON -DSANITIZE=ON -DWITH_CLANG_TIDY=ON -DTHREADED_IMPL=ON
+
+    - name: Build (Parallel)
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build
+
+    - name: Test (Parallel)
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: |
+        cd tests/
+        ctest -C
+        cd ..
+        lcov --include ${{github.workspace}}/src/byte_diff_counter_parallel.cpp -t tests/ -d src/ -c -o coverage.info
+        genhtml -o report coverage.info
+    
+    - name: Upload Report to Codecov (Parallel)
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        files: ${{github.workspace}}/build/coverage.info
+        name: codecov_hw4
+        fail_ci_if_error: false 
+        verbose: true 
+    
+    - name: Linters, Formatting (Parallel)
+      run: |
+        clang-format -i src/*.h src/byte_diff_counter_parallel.cpp tests/unit_parallel.cpp
+        cppcheck -q --enable=all src/*.h src/byte_diff_counter_parallel.cpp \
+          --suppress=passedByValue --suppress=variableScope \
+          --suppress=missingIncludeSystem --suppress=unusedFunction --language=c++
+        clang-tidy src/*.h src/byte_diff_counter_parallel.cpp -warnings-as-errors=* -extra-arg=-std=c++17 -p build/
+        cpplint --extensions=cpp src/byte_diff_counter_parallel.cpp
+    
+    - name: Configure CMake (Valgrind, Parallel)
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: |
+        rm -rf ${{github.workspace}}/build
+        cmake -B ${{github.workspace}}/build -DTHREADED_IMPL=ON
+    
+    - name: Build (Valgrind, Parallel)
+      run: cmake --build ${{github.workspace}}/build
+
+    - name: Valgrind (Parallel)
+      working-directory: ${{github.workspace}}/build//tests
+      run: |
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s ./unit_tests
+    
+    - name: Perfomance (Serial vs Parallel)
+      run: |
+        ./run_perfomance.sh
