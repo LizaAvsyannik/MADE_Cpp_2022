@@ -55,6 +55,7 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
   size_t num_threads = std::thread::hardware_concurrency();
   size_t thread_batch_size =
       static_cast<int>(std::ceil(1.0 * batch_size / num_threads));
+  std::cout << "Number of Threads: " << num_threads << '\n';
   // num_threads =
   //     thread_batch_size > 1 ? num_threads : batch_size / kMinBatchSize;
   // thread_batch_size = thread_batch_size > 1 ? thread_batch_size :
