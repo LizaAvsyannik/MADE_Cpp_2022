@@ -136,4 +136,4 @@ jobs:
     
     - name: Perfomance (Serial vs Parallel)
       run: |
-        ./run_perfomance.sh ${{github.workspace}}
+        ./run_perfomance.sh

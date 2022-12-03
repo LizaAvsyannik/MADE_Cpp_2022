@@ -1,5 +1,6 @@
 num_files=3
-filename="$1/large_data/100mb_"
+foldername="large_data"
+filename="$foldername/100mb_"
 extension=".txt"
 
 echo "Downloading files..."
@@ -7,6 +8,7 @@ for i in $(seq 1 $num_files)
 do
     if [ ! -f "$filename$i$extension" ]
     then
+        cd $foldername
         echo "Downloading file $i..."
         if [ $i -eq 1 ]
         then
@@ -21,6 +23,7 @@ do
             gdown https://drive.google.com/uc?id=1rhcU_VpcqP_if9x7H8B8hmdmkmkFWcCz 
         fi
         echo "File $i downloaded"
+        cd ..
     fi
 done
 echo "Files downloaded"
@@ -40,8 +43,8 @@ build/hw4_perfomance_measure
 echo "serial implementation built"
 
 num_files=3
-output_parallel="$1/large_data/output_parallel_100mb_"
-output_serial="$1/large_data/output_serial_100mb_"
+output_parallel="$foldername/output_parallel_100mb_"
+output_serial="$foldername/output_serial_100mb_"
 
 for i in $(seq 1 $num_files)
 do 
