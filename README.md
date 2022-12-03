@@ -15,6 +15,7 @@ cmake --build build
 ./run_perfomance.sh
 ```
 Example from 20 threads:
+
 ![Screenshot from 2022-12-03 10-42-57](https://user-images.githubusercontent.com/66686119/205430779-8e0af42f-c92b-4fc7-89f7-e323df06b615.png)
 
 ### ABOUT
