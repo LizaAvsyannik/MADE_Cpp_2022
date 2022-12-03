@@ -1,5 +1,5 @@
 num_files=3
-filename="large_data/100mb_"
+filename="$1/large_data/100mb_"
 extension=".txt"
 
 echo "Downloading files..."
@@ -40,8 +40,8 @@ build/hw4_perfomance_measure
 echo "serial implementation built"
 
 num_files=3
-output_parallel="large_data/output_parallel_100mb_"
-output_serial="large_data/output_serial_100mb_"
+output_parallel="$1/large_data/output_parallel_100mb_"
+output_serial="$1/large_data/output_serial_100mb_"
 
 for i in $(seq 1 $num_files)
 do 
