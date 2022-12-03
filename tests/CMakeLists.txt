@@ -12,20 +12,16 @@ enable_testing()
 
 if (THREADED_IMPL)
   add_executable(unit_tests unit_parallel.cpp)
+  target_link_libraries(unit_tests hw4_counter_parallel GTest::gtest_main)  
 else()
   add_executable(unit_tests unit_serial.cpp)
+  target_link_libraries(unit_tests hw4_counter_serial GTest::gtest_main)  
 endif()
 
 
 if (WITH_COVERAGE)
   target_compile_options(unit_tests PRIVATE -fprofile-arcs -ftest-coverage -O0)
   target_link_options(unit_tests PRIVATE -coverage -lgcov)
-endif()
-
-if (THREADED_IMPL)
-  target_link_libraries(unit_tests hw4_counter_parallel GTest::gtest_main)  
-else()
-  target_link_libraries(unit_tests hw4_counter_serial GTest::gtest_main)  
 endif()
 
 include(GoogleTest)

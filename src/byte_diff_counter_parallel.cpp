@@ -2,24 +2,32 @@
 #include <algorithm>
 #include <cmath>
 
+ByteDiffCounterParallel::ByteDiffCounterParallel()
+    : num_threads_(std::thread::hardware_concurrency()),
+      pool_(std::thread::hardware_concurrency()) {
+  std::cout << "Number of Threads: " << num_threads_ << '\n';
+}
+
+ByteDiffCounterParallel::~ByteDiffCounterParallel() { pool_.join(); }
+
 void ByteDiffCounterParallel::update_counter(
     std::array<size_t, kNumDiff> &counter, char first_byte, char second_byte) {
   int difference = (first_byte > second_byte) ? (first_byte - second_byte)
-                                                 : (second_byte - first_byte);
+                                              : (second_byte - first_byte);
   if ((0 <= difference) && (difference < kNumDiff)) {
     ++counter[difference];
   }
 }
 
 std::array<size_t, ByteDiffCounterParallel::kNumDiff>
-ByteDiffCounterParallel::count_bytes(const std::vector<char> batch,
+ByteDiffCounterParallel::count_bytes(const std::vector<char> &batch,
                                      char prev_batch_last_token) {
   std::array<size_t, kNumDiff> counter{};
-  char first_byte;
-  char second_byte;
-
   size_t start_idx = 0;
-  first_byte = batch[start_idx];
+  char first_byte = batch[start_idx];
+  ;
+  char second_byte = '\0';
+
   if (prev_batch_last_token) {
     update_counter(counter, prev_batch_last_token, first_byte);
   }
@@ -49,19 +57,16 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
   convert_path_to_absolute(output_filename);
 
   std::ifstream file(input_filename);
-  size_t file_size =
+  const size_t file_size =
       static_cast<size_t>(std::filesystem::file_size(input_filename));
-  size_t batch_size = file_size < kBatchSize ? file_size : kBatchSize;
-  size_t num_threads = std::thread::hardware_concurrency();
-  size_t thread_batch_size =
-      static_cast<int>(std::ceil(1.0 * batch_size / num_threads));
-  std::cout << "Number of Threads: " << num_threads << '\n';
+  const size_t batch_size = file_size < kBatchSize ? file_size : kBatchSize;
+  const size_t thread_batch_size =
+      static_cast<int>(std::ceil(1.0 * batch_size / num_threads_));
   // num_threads =
   //     thread_batch_size > 1 ? num_threads : batch_size / kMinBatchSize;
   // thread_batch_size = thread_batch_size > 1 ? thread_batch_size :
   // kMinBatchSize;
 
-  boost::asio::thread_pool pool(num_threads);
   // std::cout << batch_size << ' ' << thread_batch_size << ' ' << num_threads
   //           << '\n';
 
@@ -69,13 +74,14 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
   char prev_batch_last_token = '\0';
 
   std::vector<std::future<std::array<size_t, kNumDiff>>> threads_results;
+  threads_results.reserve(num_threads_);
   while (file.read(batch.data(), batch_size)) {
     for (auto &res : threads_results) {
       res.wait();
     }
     aggregate_results(threads_results);
-    threads_results = process_batch(pool, batch, batch_size, thread_batch_size,
-                                    num_threads, prev_batch_last_token);
+    threads_results = process_batch(batch, batch_size, thread_batch_size,
+                                    prev_batch_last_token);
     prev_batch_last_token = batch[batch_size - 1];
   }
 
@@ -85,9 +91,8 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
   aggregate_results(threads_results);
 
   if (file.gcount() != 0) {
-    threads_results =
-        process_batch(pool, batch, file.gcount(), thread_batch_size,
-                      num_threads, prev_batch_last_token);
+    threads_results = process_batch(batch, file.gcount(), thread_batch_size,
+                                    prev_batch_last_token);
     for (auto &res : threads_results) {
       res.wait();
     }
@@ -99,23 +104,22 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
 }
 
 std::vector<std::future<std::array<size_t, ByteDiffCounterParallel::kNumDiff>>>
-ByteDiffCounterParallel::process_batch(boost::asio::thread_pool &pool,
-                                       const std::vector<char> &batch,
+ByteDiffCounterParallel::process_batch(const std::vector<char> &batch,
                                        size_t batch_size,
                                        size_t thread_batch_size,
-                                       size_t num_threads,
                                        char prev_batch_last_token) {
   std::vector<std::future<std::array<size_t, kNumDiff>>> threads_results;
-  size_t start_idx;
-  size_t end_idx;
-  for (size_t i = 0; i < num_threads; ++i) {
+  size_t start_idx = 0;
+  size_t end_idx = 0;
+  for (size_t i = 0; i < num_threads_; ++i) {
     start_idx = thread_batch_size * i;
     end_idx = std::min(thread_batch_size * (i + 1), batch_size);
-    std::vector<char> thread_batch(&batch[start_idx], &batch[end_idx]);
+    const std::vector<char> thread_batch(batch.begin() + start_idx,
+                                         batch.begin() + end_idx);
     threads_results.push_back(
-        post(pool, std::packaged_task<std::array<size_t, kNumDiff>()>(
-                       std::bind(&ByteDiffCounterParallel::count_bytes, this,
-                                 thread_batch, prev_batch_last_token))));
+        post(pool_, std::packaged_task<std::array<size_t, kNumDiff>()>(
+                        std::bind(&ByteDiffCounterParallel::count_bytes, this,
+                                  thread_batch, prev_batch_last_token))));
     prev_batch_last_token = batch[end_idx - 1];
     if (end_idx == batch_size) {
       break;

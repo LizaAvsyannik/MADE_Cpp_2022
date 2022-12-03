@@ -59,7 +59,7 @@ jobs:
       run: |
         clang-format -i src/*.h src/byte_diff_counter_serial.cpp tests/unit_serial.cpp
         cppcheck -q --enable=all src/*.h src/byte_diff_counter_serial.cpp \
-          --suppress=passedByValue --suppress=variableScope \
+          --suppress=variableScope --suppress=unreadVariable \
           --suppress=missingIncludeSystem --suppress=unusedFunction --language=c++
         clang-tidy src/*.h src/byte_diff_counter_serial.cpp -warnings-as-errors=* -extra-arg=-std=c++17 -p build/
         cpplint --extensions=cpp src/byte_diff_counter_serial.cpp
@@ -114,7 +114,7 @@ jobs:
       run: |
         clang-format -i src/*.h src/byte_diff_counter_parallel.cpp tests/unit_parallel.cpp
         cppcheck -q --enable=all src/*.h src/byte_diff_counter_parallel.cpp \
-          --suppress=passedByValue --suppress=variableScope \
+          --suppress=variableScope --suppress=unreadVariable \
           --suppress=missingIncludeSystem --suppress=unusedFunction --language=c++
         clang-tidy src/*.h src/byte_diff_counter_parallel.cpp -warnings-as-errors=* -extra-arg=-std=c++17 -p build/
         cpplint --extensions=cpp src/byte_diff_counter_parallel.cpp

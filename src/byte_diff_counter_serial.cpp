@@ -4,7 +4,7 @@
 
 void ByteDiffCounterSerial::update_counter(char first_byte, char second_byte) {
   int difference = (first_byte > second_byte) ? (first_byte - second_byte)
-                                                 : (second_byte - first_byte);
+                                              : (second_byte - first_byte);
   if ((0 <= difference) && (difference < kNumDiff)) {
     ++counter_[difference];
   }
@@ -13,10 +13,9 @@ void ByteDiffCounterSerial::update_counter(char first_byte, char second_byte) {
 void ByteDiffCounterSerial::count_bytes(const std::vector<char> &batch,
                                         size_t start_idx, size_t end_idx,
                                         char prev_batch_last_token) {
-  char first_byte;
-  char second_byte;
+  char first_byte = batch[start_idx];
+  char second_byte = '\0';
 
-  first_byte = batch[start_idx];
   if (prev_batch_last_token) {
     update_counter(prev_batch_last_token, first_byte);
   }
@@ -35,9 +34,9 @@ void ByteDiffCounterSerial::process_file(std::string input_filename,
   convert_path_to_absolute(output_filename);
 
   std::ifstream file(input_filename);
-  size_t file_size =
+  const size_t file_size =
       static_cast<size_t>(std::filesystem::file_size(input_filename));
-  size_t batch_size = file_size < kBatchSize ? file_size : kBatchSize;
+  const size_t batch_size = file_size < kBatchSize ? file_size : kBatchSize;
   std::vector<char> batch(batch_size);
   char prev_batch_last_token = '\0';
 

@@ -18,16 +18,13 @@ class ByteDiffCounterBase {
   void write_results(std::string filename) const;
 
  public:
-  ByteDiffCounterBase() = default;
-  ~ByteDiffCounterBase() = default;
-
   virtual void process_file(std::string input_filename,
                             std::string output_filename) = 0;
 };
 
 class ByteDiffCounterSerial : public ByteDiffCounterBase {
  private:
-  void update_counter(char first_byte, char second_byte);
+  inline void update_counter(char first_byte, char second_byte);
   void count_bytes(const std::vector<char> &batch, size_t start_idx,
                    size_t end_idx, char prev_batch_last_token);
 
@@ -38,19 +35,24 @@ class ByteDiffCounterSerial : public ByteDiffCounterBase {
 
 class ByteDiffCounterParallel : public ByteDiffCounterBase {
  private:
-  void update_counter(std::array<size_t, kNumDiff> &counter, char first_byte,
-                      char second_byte);
-  std::array<size_t, kNumDiff> count_bytes(const std::vector<char> batch,
+ private:
+  const size_t num_threads_;
+  boost::asio::thread_pool pool_;
+
+  inline void update_counter(std::array<size_t, kNumDiff> &counter,
+                             char first_byte, char second_byte);
+  std::array<size_t, kNumDiff> count_bytes(const std::vector<char> &batch,
                                            char prev_batch_last_token);
   void aggregate_results(
       std::vector<std::future<std::array<size_t, kNumDiff>>> &threads_results);
 
   std::vector<std::future<std::array<size_t, kNumDiff>>>
-  process_batch(boost::asio::thread_pool &pool, const std::vector<char> &batch,
-                size_t batch_size, size_t thread_batch_size, size_t num_threads,
-                char prev_batch_last_token);
+  process_batch(const std::vector<char> &batch, size_t batch_size,
+                size_t thread_batch_size, char prev_batch_last_token);
 
  public:
+  ByteDiffCounterParallel();
+  ~ByteDiffCounterParallel();
   void process_file(std::string input_filename,
                     std::string output_filename) override;
 };
