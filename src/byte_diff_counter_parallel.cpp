@@ -25,7 +25,6 @@ ByteDiffCounterParallel::count_bytes(const std::vector<char> &batch,
   std::array<size_t, kNumDiff> counter{};
   size_t start_idx = 0;
   char first_byte = batch[start_idx];
-  ;
   char second_byte = '\0';
 
   if (prev_batch_last_token) {
