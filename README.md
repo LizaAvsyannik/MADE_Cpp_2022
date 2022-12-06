@@ -12,6 +12,8 @@ cmake --build build
 
 ### TO RUN PERFOMANCE TEST (Serial vs Parallel implementation)
 ```
+sudo apt-get install libboost-all-dev
+pip3 install gdown  
 ./run_perfomance.sh
 ```
 Example from 20 threads:
