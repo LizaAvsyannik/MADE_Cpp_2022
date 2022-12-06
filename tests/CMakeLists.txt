@@ -1,0 +1,28 @@
+include_directories(${CMAKE_SOURCE_DIR})  # make includes relative to project root
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.12.1
+)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+if (THREADED_IMPL)
+  add_executable(unit_tests unit_parallel.cpp)
+  target_link_libraries(unit_tests hw4_counter_parallel GTest::gtest_main)  
+else()
+  add_executable(unit_tests unit_serial.cpp)
+  target_link_libraries(unit_tests hw4_counter_serial GTest::gtest_main)  
+endif()
+
+
+if (WITH_COVERAGE)
+  target_compile_options(unit_tests PRIVATE -fprofile-arcs -ftest-coverage -O0)
+  target_link_options(unit_tests PRIVATE -coverage -lgcov)
+endif()
+
+include(GoogleTest)
+gtest_discover_tests(unit_tests)
