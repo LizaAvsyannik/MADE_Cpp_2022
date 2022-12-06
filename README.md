@@ -16,7 +16,7 @@ cmake --build build
 ```
 Example from 20 threads:
 
-![Screenshot from 2022-12-03 17-04-51](https://user-images.githubusercontent.com/66686119/205444984-61c27b02-4e58-4041-a803-ab9c8173e711.png)
+![Screenshot from 2022-12-06 22-12-04](https://user-images.githubusercontent.com/66686119/206001994-48145ecb-98a6-4faf-b491-8cc393a706be.png)
 
 
 ### ABOUT
