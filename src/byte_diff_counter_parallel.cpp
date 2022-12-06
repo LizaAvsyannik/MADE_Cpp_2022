@@ -60,14 +60,7 @@ void ByteDiffCounterParallel::process_file(std::string input_filename,
       static_cast<size_t>(std::filesystem::file_size(input_filename));
   const size_t batch_size = file_size < kBatchSize ? file_size : kBatchSize;
   const size_t thread_batch_size =
-      static_cast<int>(std::ceil(1.0 * batch_size / num_threads_));
-  // num_threads =
-  //     thread_batch_size > 1 ? num_threads : batch_size / kMinBatchSize;
-  // thread_batch_size = thread_batch_size > 1 ? thread_batch_size :
-  // kMinBatchSize;
-
-  // std::cout << batch_size << ' ' << thread_batch_size << ' ' << num_threads
-  //           << '\n';
+      static_cast<size_t>(std::ceil(1.0 * batch_size / num_threads_));
 
   std::vector<char> batch(batch_size);
   char prev_batch_last_token = '\0';

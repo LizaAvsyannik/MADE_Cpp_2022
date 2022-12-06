@@ -13,7 +13,7 @@ class ByteDiffCounterBase {
  protected:
   static const size_t kNumDiff = 11;
   std::array<size_t, kNumDiff> counter_{};
-  const size_t kBatchSize = 16 * 1024 * 1024;
+  const size_t kBatchSize = 8 * 1024 * 1024;
 
   void write_results(std::string filename) const;
 

@@ -74,7 +74,7 @@ jobs:
     - name: Build (Valgrind, Serial)
       run: cmake --build ${{github.workspace}}/build
 
-    - name: Valgrind (Parallel)
+    - name: Valgrind (Serial)
       working-directory: ${{github.workspace}}/build//tests
       run: |
         valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all -s ./unit_tests
